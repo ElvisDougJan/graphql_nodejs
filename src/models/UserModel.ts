@@ -55,11 +55,18 @@ export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
         beforeCreate: (user: UserInstance, options: Sequelize.CreateOptions): void => {
           const salt = genSaltSync();
           user.password = hashSync(user.password, salt);
+        },
+        //Realizando criptografia da senha antes de atualizar
+        beforeUpdate: (user: UserInstance, options: Sequelize.CreateOptions): void => {
+          if (user.changed('password')) {
+            const salt = genSaltSync();
+            user.password = hashSync(user.password, salt);
+          }
         }
       }
     });
 
-    User.associate = (models: ModelsInterface): void => {};
+  User.associate = (models: ModelsInterface): void => { };
 
   User.prototype.isPassword = (encodedPassword: string, password: string): boolean => {
     return compareSync(password, encodedPassword);

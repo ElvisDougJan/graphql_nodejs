@@ -14,6 +14,13 @@ let db = null;
 
 if (!db) {
   db = {};
+
+  //Definindo aliases do sequelize
+  //Veja mais em http://docs.sequelizejs.com/manual/tutorial/querying.html#operators-aliases
+  const operatorsAliases = false;
+
+  config = Object.assign({operatorsAliases}, config);
+
 // Definindo as configurações do banco com base no que está definido no config
 // O último parametro não especifica porque irá usar o host e o dialect juntos
   const sequelize: Sequelize.Sequelize = new Sequelize(

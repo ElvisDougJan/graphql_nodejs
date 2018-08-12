@@ -1,5 +1,5 @@
 const postTypes = `
-  types Post {
+  type Post {
     id: ID!
     title: String!
     content: String!
@@ -20,7 +20,7 @@ const postTypes = `
 `;
 
 const postQueries = `
-  posts(first: Int, offset: Int): [ Posts! ]!
+  posts(first: Int, offset: Int): [ Post! ]!
   post(id: ID!): Post
 
 `;

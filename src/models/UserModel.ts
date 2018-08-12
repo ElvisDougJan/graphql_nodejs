@@ -1,19 +1,22 @@
 import * as Sequelize from "sequelize";
 import { BaseModelInterface } from "../interfaces/BaseModelInterface";
 import { genSaltSync, hashSync, compareSync } from 'bcryptjs';
+import { ModelsInterface } from "../interfaces/ModelInterfaces";
 
 export interface UserAttributes {
   id?: number;
   name?: string;
   email?: string;
   password?: string;
+  createdAt?: string;
+  updatedAt?: string
 }
 
 export interface UserInstance extends Sequelize.Instance<UserAttributes>, UserAttributes {
   isPassword(encodedPassword: string, password: string): boolean;
 }
 
-export interface UserModel extends BaseModelInterface, Sequelize.Model<UserInstance, UserAttributes> {}
+export interface UserModel extends BaseModelInterface, Sequelize.Model<UserInstance, UserAttributes> { }
 
 export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes): UserModel => {
   const User: UserModel = sequelize.define('User', {
@@ -47,13 +50,19 @@ export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
       defaultValue: null
     }
   }, {
-    tableName: 'users',
-    hooks: {
-      beforeCreate: (user: UserInstance, options: Sequelize.CreateOptions): void => {
-        const salt = genSaltSync();
-        user.password = hashSync(user.password, salt);
+      tableName: 'users',
+      hooks: {
+        beforeCreate: (user: UserInstance, options: Sequelize.CreateOptions): void => {
+          const salt = genSaltSync();
+          user.password = hashSync(user.password, salt);
+        }
       }
-    }
-  });
+    });
+
+    User.associate = (models: ModelsInterface): void => {};
+
+  User.prototype.isPassword = (encodedPassword: string, password: string): boolean => {
+    return compareSync(password, encodedPassword);
+  };
   return User;
 }

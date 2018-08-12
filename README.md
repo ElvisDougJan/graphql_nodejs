@@ -1,0 +1,1 @@
+API maked with Node.Js, TypeScript, GraphQL, Sequelize and MySql

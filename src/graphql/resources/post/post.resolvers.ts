@@ -1,19 +1,19 @@
 import { GraphQLResolveInfo } from "graphql";
 
 import { DbConnection } from "../../../interfaces/DbConnectionInterface";
-import { parseNamedType } from "graphql/language/parser";
 import { PostInstance } from "../../../models/PostModels";
- 
+import { Transaction } from "sequelize";
+
 export const postResolvers = {
 
   Post: {
     author: (post: PostInstance, args, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
-      return db.User.findById(post.get('author'));
+      return db.Post.findById(post.get('author'));
     },
 
     comments: (post: PostInstance, { first = 10, offset = 0 }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
       return db.Comment.findAll({
-        where: {post: post.get('id')},
+        where: { post: post.get('id') },
         limit: first,
         offset: offset
       })
@@ -28,12 +28,53 @@ export const postResolvers = {
       });
     },
 
-    post: (parseNamedType, { id }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
-      return db.Post.findById(id).then((post: PostInstance) => {
-        if(!post) throw new Error(`Post com o id ${id} não encontrado!`);
-        return post;
-      })
+    post: (parent, { id }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
+      return db.Post.findById(id)
+        .then((post: PostInstance) => {
+          if (!post) throw new Error(`Post com o id ${id} não encontrado!`);
+          return post;
+        })
+    }
+  },
+
+  Mutation: {
+    createPost: (parent, { input }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
+      return db.sequelize.transaction((t: Transaction) => {
+        return db.Post.create(input, { transaction: t });
+      });
+    },
+
+    updatePost: (parent, { id, input }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
+
+      id = parseInt(id);
+
+      return db.sequelize.transaction((t: Transaction) => {
+
+        return db.Post.findById(id)
+          .then((post: PostInstance) => {
+            if (!post) throw new Error(`Post com ${id} não encontrado!`);
+            return post.update(input, { transaction: t });
+          });
+
+      });
+
+    },
+
+    deletePost: (parent, { id }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
+
+      id = parseInt(id);
+
+      return db.sequelize.transaction((t: Transaction) => {
+
+        return db.Post
+          .findById(id)
+          .then((post: PostInstance) => {
+            if (!post) throw new Error(`Post com ${id} não encontrado!`);
+            return post.destroy({ transaction: t })
+              .then(post => !!post);
+          });
+
+      });
     }
   }
 };
-
